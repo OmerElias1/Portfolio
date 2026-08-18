@@ -70,7 +70,7 @@ export const config = {
         },
         {
             position: "Started Software Engineering",
-            company: "HiLCoE School of CS & Tech",
+            company: "HiLCoE School of Science & Technology",
             period: "2024",
             location: "Ethiopia",
             description: "Began Software Engineering studies at HiLCoE School of Computer Science & Technology, building a strong foundation in programming, databases, networking, and software principles.",

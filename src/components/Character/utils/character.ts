@@ -23,20 +23,20 @@ const setCharacter = (
         const blobUrl = URL.createObjectURL(new Blob([encryptedBlob]));
 
         const darkSkinMaterial = new THREE.MeshStandardMaterial({
-          color: new THREE.Color("#784e35"),
+          color: new THREE.Color("#d5a382"),
           roughness: 0.6,
           metalness: 0.05,
         });
 
-        const blackTopMaterial = new THREE.MeshStandardMaterial({
-          color: new THREE.Color("#111111"),
-          roughness: 0.5,
-          metalness: 0.1,
+        const whiteTopMaterial = new THREE.MeshStandardMaterial({
+          color: new THREE.Color("#f5f6f8"),
+          roughness: 0.7,
+          metalness: 0.02,
         });
 
-        const whiteBottomMaterial = new THREE.MeshStandardMaterial({
-          color: new THREE.Color("#ffffff"),
-          roughness: 0.4,
+        const jeansMaterial = new THREE.MeshStandardMaterial({
+          color: new THREE.Color("#2c4a6a"),
+          roughness: 0.85,
           metalness: 0.05,
         });
 
@@ -67,14 +67,79 @@ const setCharacter = (
                 if (isSkin) {
                   mesh.material = darkSkinMaterial;
                 } else if (isTop) {
-                  mesh.material = blackTopMaterial;
+                  mesh.material = whiteTopMaterial;
                 } else if (isBottom) {
-                  mesh.material = whiteBottomMaterial;
+                  mesh.material = jeansMaterial;
                 } else if (mesh.material && !Array.isArray(mesh.material)) {
                   (mesh.material as THREE.ShaderMaterial).precision = 'mediump';
                 }
               }
             });
+            const headBone =
+              character.getObjectByName("spine006") ||
+              character.getObjectByName("spine.006");
+            if (headBone) {
+              const mustacheGroup = new THREE.Group();
+              mustacheGroup.name = "mustache";
+
+              const mustacheMaterial = new THREE.MeshStandardMaterial({
+                color: new THREE.Color("#181818"),
+                roughness: 0.65,
+                metalness: 0.05,
+                side: THREE.DoubleSide,
+              });
+
+              const createHalf = (isRight: boolean) => {
+                const shape = new THREE.Shape();
+                const sign = isRight ? 1 : -1;
+
+                shape.moveTo(0, 0.042);
+                shape.bezierCurveTo(
+                  sign * 0.10, 0.062,
+                  sign * 0.24, 0.048,
+                  sign * 0.38, -0.035
+                );
+                shape.bezierCurveTo(
+                  sign * 0.40, -0.065,
+                  sign * 0.36, -0.095,
+                  sign * 0.31, -0.085
+                );
+                shape.bezierCurveTo(
+                  sign * 0.22, -0.055,
+                  sign * 0.10, -0.015,
+                  0, 0.002
+                );
+                shape.closePath();
+
+                const extrudeSettings = {
+                  steps: 1,
+                  depth: 0.025,
+                  bevelEnabled: true,
+                  bevelThickness: 0.012,
+                  bevelSize: 0.01,
+                  bevelSegments: 3,
+                };
+
+                const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                const pos = geom.attributes.position;
+                for (let i = 0; i < pos.count; i++) {
+                  const x = pos.getX(i);
+                  const z = pos.getZ(i);
+                  pos.setZ(i, z - Math.pow(x, 2) * 0.55);
+                }
+                geom.computeVertexNormals();
+
+                return new THREE.Mesh(geom, mustacheMaterial);
+              };
+
+              mustacheGroup.add(createHalf(true));
+              mustacheGroup.add(createHalf(false));
+              mustacheGroup.position.set(0, 0.74, 1.23);
+              mustacheGroup.rotation.x = -0.05;
+
+              headBone.add(mustacheGroup);
+            }
+
             resolve(gltf);
             setCharTimeline(character, camera);
             setAllTimeline();
